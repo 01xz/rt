@@ -33,8 +33,10 @@ const pixel_delta_u: Point = viewport_u.div(@floatFromInt(image_width));
 const pixel_delta_v: Point = viewport_v.div(@floatFromInt(image_height));
 
 // locations
-const viewport_upper_left: Point = camera_centor.vsub(&Point.init(.{ 0, 0, focal_length }))
-    .vsub(&viewport_u.div(2.0)).vsub(&viewport_v.div(2.0));
+const viewport_upper_left: Point = camera_centor
+    .vsub(&Point.init(.{ 0, 0, focal_length }))
+    .vsub(&viewport_u.div(2.0))
+    .vsub(&viewport_v.div(2.0));
 
 const pixel00_loc: Point = viewport_upper_left.vadd(&pixel_delta_u.vadd(&pixel_delta_v).mul(0.5));
 
