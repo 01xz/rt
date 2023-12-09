@@ -6,6 +6,18 @@ pub fn Vec3(comptime T: type) type {
 
         const Self = @This();
 
+        pub fn x(self: *const Self) T {
+            return self.data[0];
+        }
+
+        pub fn y(self: *const Self) T {
+            return self.data[1];
+        }
+
+        pub fn z(self: *const Self) T {
+            return self.data[2];
+        }
+
         pub fn init(data: [3]T) Self {
             return .{
                 .data = data,

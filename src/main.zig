@@ -1,6 +1,18 @@
 const std = @import("std");
 const config = @import("config");
 
+const Vec3 = @import("vec3.zig").Vec3;
+const Color = Vec3(f64);
+
+pub fn writeColor(writer: anytype, color: *const Color) !void {
+    const icolor = Vec3(u8).init([_]u8{
+        @intFromFloat(255.999 * color.x()),
+        @intFromFloat(255.999 * color.y()),
+        @intFromFloat(255.999 * color.z()),
+    });
+    try writer.print("{d} {d} {d}\n", .{ icolor.x(), icolor.y(), icolor.z() });
+}
+
 pub fn writePPM(writer: anytype) !void {
     const image_width = 256;
     const image_height = 256;
@@ -12,10 +24,8 @@ pub fn writePPM(writer: anytype) !void {
             const r: f64 = @as(f64, @floatFromInt(i)) / @as(f64, @floatFromInt(image_width - 1));
             const g: f64 = @as(f64, @floatFromInt(j)) / @as(f64, @floatFromInt(image_height - 1));
             const b: f64 = 0.25;
-            const ir: u8 = @intFromFloat(255.999 * r);
-            const ig: u8 = @intFromFloat(255.999 * g);
-            const ib: u8 = @intFromFloat(255.999 * b);
-            try writer.print("{d} {d} {d}\n", .{ ir, ig, ib });
+            const color = Color.init([_]f64{ r, g, b });
+            try writeColor(writer, &color);
         }
     }
 }
