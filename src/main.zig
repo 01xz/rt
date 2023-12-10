@@ -57,7 +57,7 @@ const Sphere = struct {
 
 pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) bool {
     const discriminant = blk: {
-        const oc = sphere.centor.vsub(&ray.origin);
+        const oc = ray.origin.vsub(&sphere.centor);
         const a = ray.direction.dot(&ray.direction);
         const b = 2.0 * oc.dot(&ray.direction);
         const c = oc.dot(&oc) - (sphere.radius * sphere.radius);
