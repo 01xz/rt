@@ -97,11 +97,11 @@ pub fn rayColor(ray: *const Ray) Color {
 }
 
 pub fn writeColor(writer: anytype, color: *const Color) !void {
-    const icolor = Vec3(u8).init([_]u8{
+    const icolor = Vec3(u8).at(
         @intFromFloat(255.999 * color.x()),
         @intFromFloat(255.999 * color.y()),
         @intFromFloat(255.999 * color.z()),
-    });
+    );
     try writer.print("{d} {d} {d}\n", .{ icolor.x(), icolor.y(), icolor.z() });
 }
 
