@@ -9,7 +9,7 @@ const Ray = @import("Ray.zig");
 // image
 const aspect_ratio: f64 = 16.0 / 9.0;
 
-const image_width: u32 = 1024;
+const image_width: u32 = 1920;
 const image_height: u32 = blk: {
     const height: u32 = @intFromFloat(@as(f64, @floatFromInt(image_width)) / aspect_ratio);
     break :blk if (height < 1) 1 else height;
@@ -40,8 +40,39 @@ const viewport_upper_left: Point = camera_centor
 
 const pixel00_loc: Point = viewport_upper_left.vadd(&pixel_delta_u.vadd(&pixel_delta_v).mul(0.5));
 
+// sphere
+const Sphere = struct {
+    centor: Point,
+    radius: f64,
+
+    const Self = @This();
+
+    pub fn init(centor: Point, radius: f64) Self {
+        return .{
+            .centor = centor,
+            .radius = radius,
+        };
+    }
+};
+
+pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) bool {
+    const discriminant = blk: {
+        const oc = sphere.centor.vsub(&ray.origin);
+        const a = ray.direction.dot(&ray.direction);
+        const b = 2.0 * oc.dot(&ray.direction);
+        const c = oc.dot(&oc) - (sphere.radius * sphere.radius);
+        break :blk b * b - 4.0 * a * c;
+    };
+    return discriminant >= 0;
+}
+
 // ray color: a blue-to-white gradient
 pub fn rayColor(ray: *const Ray) Color {
+    // a red sphere at (0, 0, -1)
+    if (hitSphere(ray, &Sphere.init(Point.init(.{ 0.0, 0.0, -1.0 }), 0.5))) {
+        return Color.init(.{ 1.0, 0.0, 0.0 });
+    }
+
     const color_start = Color.init(.{ 1.0, 1.0, 1.0 });
     const color_end = Color.init(.{ 0.5, 0.7, 1.0 });
 
