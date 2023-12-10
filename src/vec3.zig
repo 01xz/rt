@@ -71,7 +71,11 @@ pub fn Vec3(comptime T: type) type {
         }
 
         pub fn len(self: *const Self) T {
-            return @sqrt(@reduce(.Add, self.data * self.data));
+            return @sqrt(self.lenSquared());
+        }
+
+        pub fn lenSquared(self: *const Self) T {
+            return @reduce(.Add, self.data * self.data);
         }
 
         pub fn unit(self: *const Self) Self {

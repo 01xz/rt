@@ -57,16 +57,16 @@ const Sphere = struct {
 
 pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) ?f64 {
     const oc = ray.origin.vsub(&sphere.centor);
-    const a = ray.direction.dot(&ray.direction);
-    const b = 2.0 * oc.dot(&ray.direction);
-    const c = oc.dot(&oc) - (sphere.radius * sphere.radius);
-    const discriminant = b * b - 4.0 * a * c;
+    const a = ray.direction.lenSquared();
+    const hb = oc.dot(&ray.direction);
+    const c = oc.lenSquared() - (sphere.radius * sphere.radius);
+    const discriminant = hb * hb - a * c;
 
     if (discriminant < 0.0) {
         return null;
     } else {
         // the smallest t
-        return (-b - @sqrt(discriminant)) / (2.0 * a);
+        return (-hb - @sqrt(discriminant)) / a;
     }
 }
 
