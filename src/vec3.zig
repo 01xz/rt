@@ -86,7 +86,7 @@ pub fn Vec3(comptime T: type) type {
 
         pub fn cross(self: *const Self, other: *const Self) Self {
             return .{
-                .data = @Vector(3, T){
+                .data = .{
                     self.data[1] * other.data[2] - self.data[2] * other.data[1],
                     self.data[2] * other.data[0] - self.data[0] * other.data[2],
                     self.data[0] * other.data[1] - self.data[1] * other.data[0],
