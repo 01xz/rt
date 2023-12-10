@@ -22,11 +22,11 @@ const viewport_height: f64 = 2.0;
 const viewport_width: f64 = viewport_height *
     (@as(f64, @floatFromInt(image_width)) / @as(f64, @floatFromInt(image_height)));
 
-const camera_centor: Point = Point.init(.{ 0.0, 0.0, 0.0 });
+const camera_centor: Point = Point.at(0.0, 0.0, 0.0);
 
 // viewport edges
-const viewport_u: Point = Point.init(.{ viewport_width, 0.0, 0.0 });
-const viewport_v: Point = Point.init(.{ 0.0, -viewport_height, 0.0 });
+const viewport_u: Point = Point.at(viewport_width, 0.0, 0.0);
+const viewport_v: Point = Point.at(0.0, -viewport_height, 0.0);
 
 // pixel delta
 const pixel_delta_u: Point = viewport_u.div(@floatFromInt(image_width));
@@ -34,7 +34,7 @@ const pixel_delta_v: Point = viewport_v.div(@floatFromInt(image_height));
 
 // locations
 const viewport_upper_left: Point = camera_centor
-    .vsub(&Point.init(.{ 0, 0, focal_length }))
+    .vsub(&Point.at(0, 0, focal_length))
     .vsub(&viewport_u.div(2.0))
     .vsub(&viewport_v.div(2.0));
 
@@ -73,19 +73,19 @@ pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) ?f64 {
 // ray color: a blue-to-white gradient
 pub fn rayColor(ray: *const Ray) Color {
     // a red sphere at (0, 0, -1)
-    const sphere = Sphere.init(Point.init(.{ 0.0, 0.0, -1.0 }), 0.5);
+    const sphere = Sphere.init(Point.at(0.0, 0.0, -1.0), 0.5);
 
     if (hitSphere(ray, &sphere)) |t| {
         const e = ray.at(t).vsub(&sphere.centor).unit();
-        return Color.init(.{
+        return Color.at(
             0.5 * (e.x() + 1.0),
             0.5 * (e.y() + 1.0),
             0.5 * (e.z() + 1.0),
-        });
+        );
     }
 
-    const color_start = Color.init(.{ 1.0, 1.0, 1.0 });
-    const color_end = Color.init(.{ 0.5, 0.7, 1.0 });
+    const color_start = Color.at(1.0, 1.0, 1.0);
+    const color_end = Color.at(0.5, 0.7, 1.0);
 
     const ray_unit_vec = ray.direction.unit();
 

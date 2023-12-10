@@ -24,6 +24,10 @@ pub fn Vec3(comptime T: type) type {
             };
         }
 
+        pub fn at(a: T, b: T, c: T) Self {
+            return Self.init(.{ a, b, c });
+        }
+
         pub fn fill(data: T) Self {
             return .{
                 .data = @splat(data),
@@ -103,6 +107,8 @@ pub fn Vec3(comptime T: type) type {
 test "Vec3 init" {
     const v1 = Vec3(f64).init(.{ 3.0, 4.0, 5.0 });
     try std.testing.expectEqual(v1.data, @Vector(3, f64){ 3.0, 4.0, 5.0 });
+    const v2 = Vec3(f64).at(3.0, 4.0, 5.0);
+    try std.testing.expectEqual(v1.data, v2.data);
 }
 
 test "Vec3 fill" {
@@ -124,24 +130,24 @@ test "Vec3 op" {
 }
 
 test "Vec3 len" {
-    const v1 = Vec3(f64).init(.{ 3.0, 4.0, 5.0 });
+    const v1 = Vec3(f64).at(3.0, 4.0, 5.0);
     try std.testing.expectEqual(v1.len(), 7.0710678118654755);
 }
 
 test "Vec3 unit" {
-    const v1 = Vec3(f64).init(.{ 1.0, 2.0, 3.0 });
+    const v1 = Vec3(f64).at(1.0, 2.0, 3.0);
     const l = @sqrt(14.0);
     try std.testing.expectEqual(v1.unit().data, @Vector(3, f64){ 1.0 / l, 2.0 / l, 3.0 / l });
 }
 
 test "Vec3 dot" {
-    const v1 = Vec3(f64).init(.{ 1.0, 2.0, 3.0 });
-    const v2 = Vec3(f64).init(.{ 1.0, 5.0, 7.0 });
+    const v1 = Vec3(f64).at(1.0, 2.0, 3.0);
+    const v2 = Vec3(f64).at(1.0, 5.0, 7.0);
     try std.testing.expectEqual(v1.dot(&v2), 32.0);
 }
 
 test "Vec3 cross" {
-    const v1 = Vec3(f64).init(.{ 1.0, 2.0, 3.0 });
-    const v2 = Vec3(f64).init(.{ 1.0, 5.0, 7.0 });
+    const v1 = Vec3(f64).at(1.0, 2.0, 3.0);
+    const v2 = Vec3(f64).at(1.0, 5.0, 7.0);
     try std.testing.expectEqual(v1.cross(&v2).data, @Vector(3, f64){ -1.0, -4.0, 3.0 });
 }
