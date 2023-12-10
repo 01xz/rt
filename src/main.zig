@@ -55,7 +55,7 @@ const Sphere = struct {
     }
 };
 
-pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) f64 {
+pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) ?f64 {
     const oc = ray.origin.vsub(&sphere.centor);
     const a = ray.direction.dot(&ray.direction);
     const b = 2.0 * oc.dot(&ray.direction);
@@ -63,7 +63,7 @@ pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) f64 {
     const discriminant = b * b - 4.0 * a * c;
 
     if (discriminant < 0.0) {
-        return -1.0;
+        return null;
     } else {
         // the smallest t
         return (-b - @sqrt(discriminant)) / (2.0 * a);
@@ -74,8 +74,8 @@ pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) f64 {
 pub fn rayColor(ray: *const Ray) Color {
     // a red sphere at (0, 0, -1)
     const sphere = Sphere.init(Point.init(.{ 0.0, 0.0, -1.0 }), 0.5);
-    const t = hitSphere(ray, &sphere);
-    if (t > 0.0) {
+
+    if (hitSphere(ray, &sphere)) |t| {
         const e = ray.at(t).vsub(&sphere.centor).unit();
         return Color.init(.{
             0.5 * (e.x() + 1.0),
