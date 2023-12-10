@@ -55,22 +55,33 @@ const Sphere = struct {
     }
 };
 
-pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) bool {
-    const discriminant = blk: {
-        const oc = ray.origin.vsub(&sphere.centor);
-        const a = ray.direction.dot(&ray.direction);
-        const b = 2.0 * oc.dot(&ray.direction);
-        const c = oc.dot(&oc) - (sphere.radius * sphere.radius);
-        break :blk b * b - 4.0 * a * c;
-    };
-    return discriminant >= 0;
+pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) f64 {
+    const oc = ray.origin.vsub(&sphere.centor);
+    const a = ray.direction.dot(&ray.direction);
+    const b = 2.0 * oc.dot(&ray.direction);
+    const c = oc.dot(&oc) - (sphere.radius * sphere.radius);
+    const discriminant = b * b - 4.0 * a * c;
+
+    if (discriminant < 0.0) {
+        return -1.0;
+    } else {
+        // the smallest t
+        return (-b - @sqrt(discriminant)) / (2.0 * a);
+    }
 }
 
 // ray color: a blue-to-white gradient
 pub fn rayColor(ray: *const Ray) Color {
     // a red sphere at (0, 0, -1)
-    if (hitSphere(ray, &Sphere.init(Point.init(.{ 0.0, 0.0, -1.0 }), 0.5))) {
-        return Color.init(.{ 1.0, 0.0, 0.0 });
+    const sphere = Sphere.init(Point.init(.{ 0.0, 0.0, -1.0 }), 0.5);
+    const t = hitSphere(ray, &sphere);
+    if (t > 0.0) {
+        const e = ray.at(t).vsub(&sphere.centor).unit();
+        return Color.init(.{
+            0.5 * (e.x() + 1.0),
+            0.5 * (e.y() + 1.0),
+            0.5 * (e.z() + 1.0),
+        });
     }
 
     const color_start = Color.init(.{ 1.0, 1.0, 1.0 });

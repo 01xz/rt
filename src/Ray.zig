@@ -14,6 +14,6 @@ pub fn init(origin: Vec3, direction: Vec3) Ray {
     };
 }
 
-pub fn at(self: *Ray, t: f64) Vec3 {
+pub fn at(self: *const Ray, t: f64) Vec3 {
     return self.origin.vadd(&self.direction.mul(t));
 }
