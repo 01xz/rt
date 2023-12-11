@@ -1,10 +1,19 @@
 const std = @import("std");
 const config = @import("config");
+const hittable = @import("hittable.zig");
 
 const Vec3 = @import("vec3.zig").Vec3;
 const Point = Vec3(f64);
 const Color = Vec3(f64);
 const Ray = @import("Ray.zig");
+const HittableList = hittable.HittableList;
+const HitRecord = hittable.HitRecord;
+const Hittable = hittable.Hittable;
+const Sphere = hittable.Sphere;
+
+// constants
+const pi: f64 = 3.1415926535897932385;
+const inf = std.math.inf(f64);
 
 // image
 const aspect_ratio: f64 = 16.0 / 9.0;
@@ -40,48 +49,12 @@ const viewport_upper_left: Point = camera_centor
 
 const pixel00_loc: Point = viewport_upper_left.vadd(&pixel_delta_u.vadd(&pixel_delta_v).mul(0.5));
 
-// sphere
-const Sphere = struct {
-    centor: Point,
-    radius: f64,
+pub fn rayColor(ray: *const Ray, world: *const HittableList) Color {
+    var rec: HitRecord = undefined;
 
-    const Self = @This();
-
-    pub fn init(centor: Point, radius: f64) Self {
-        return .{
-            .centor = centor,
-            .radius = radius,
-        };
-    }
-};
-
-pub fn hitSphere(ray: *const Ray, sphere: *const Sphere) ?f64 {
-    const oc = ray.origin.vsub(&sphere.centor);
-    const a = ray.direction.lenSquared();
-    const hb = oc.dot(&ray.direction);
-    const c = oc.lenSquared() - (sphere.radius * sphere.radius);
-    const discriminant = hb * hb - a * c;
-
-    if (discriminant < 0.0) {
-        return null;
-    } else {
-        // the smallest t
-        return (-hb - @sqrt(discriminant)) / a;
-    }
-}
-
-// ray color: a blue-to-white gradient
-pub fn rayColor(ray: *const Ray) Color {
-    // a red sphere at (0, 0, -1)
-    const sphere = Sphere.init(Point.at(0.0, 0.0, -1.0), 0.5);
-
-    if (hitSphere(ray, &sphere)) |t| {
-        const e = ray.at(t).vsub(&sphere.centor).unit();
-        return Color.at(
-            0.5 * (e.x() + 1.0),
-            0.5 * (e.y() + 1.0),
-            0.5 * (e.z() + 1.0),
-        );
+    // normals-colored world
+    if (world.hit(ray, 0.0, inf, &rec)) {
+        return Color.at(1.0, 1.0, 1.0).vadd(&rec.normal).mul(0.5);
     }
 
     const color_start = Color.at(1.0, 1.0, 1.0);
@@ -105,7 +78,7 @@ pub fn writeColor(writer: anytype, color: *const Color) !void {
     try writer.print("{d} {d} {d}\n", .{ icolor.x(), icolor.y(), icolor.z() });
 }
 
-pub fn writePPM(writer: anytype) !void {
+pub fn writePPM(writer: anytype, world: *const HittableList) !void {
     try writer.print("P3\n{d} {d}\n255\n", .{ image_width, image_height });
 
     for (0..image_height) |j| {
@@ -115,17 +88,31 @@ pub fn writePPM(writer: anytype) !void {
                 .vadd(&pixel_delta_v.mul(@floatFromInt(j)));
             const ray_direction = pixel_centor.vsub(&camera_centor);
             const ray = Ray.init(camera_centor, ray_direction);
-            const color = rayColor(&ray);
+            const color = rayColor(&ray, world);
             try writeColor(writer, &color);
         }
     }
 }
 
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    var allocator = arena.allocator();
+
+    // world
+    var world = HittableList.init(allocator);
+    defer world.deinit();
+    try world.add(.{ .sphere = Sphere.init(Point.at(0.0, 0.0, -1.0), 0.5) });
+    try world.add(.{ .sphere = Sphere.init(Point.at(0.0, -100.5, -1.0), 100.0) });
+
     var buffer_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
     var writer = buffer_writer.writer();
 
-    try writePPM(&writer);
+    try writePPM(&writer, &world);
 
     try buffer_writer.flush();
 
