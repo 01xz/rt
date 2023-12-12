@@ -25,7 +25,7 @@ pixel00_loc: Point,
 pixel_delta_u: Vec3(f64),
 pixel_delta_v: Vec3(f64),
 
-pub fn init(aspect_ratio: f64, image_width: u32) Camera {
+pub fn init(comptime aspect_ratio: f64, comptime image_width: u32) Camera {
     const image_height: u32 = blk: {
         const height: u32 = @intFromFloat(@as(f64, @floatFromInt(image_width)) / aspect_ratio);
         break :blk if (height < 1) 1 else height;
