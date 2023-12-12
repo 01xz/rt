@@ -5,6 +5,7 @@ const Point = Vec3(f64);
 const Ray = @import("Ray.zig");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
+const Interval = @import("Interval.zig");
 
 pub const HitRecord = struct {
     point: Point,
@@ -18,9 +19,9 @@ pub const Hittable = union(enum) {
 
     const Self = @This();
 
-    pub fn hit(self: Self, ray: *const Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    pub fn hit(self: Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
         return switch (self) {
-            .sphere => |s| s.hit(ray, ray_tmin, ray_tmax, rec),
+            .sphere => |s| s.hit(ray, ray_t, rec),
         };
     }
 };
@@ -44,13 +45,13 @@ pub const HittableList = struct {
         try self.objects.append(object);
     }
 
-    pub fn hit(self: *const Self, ray: *const Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
         var hit_record: HitRecord = undefined;
         var hit_anything: bool = false;
-        var closest_so_far: f64 = ray_tmax;
+        var closest_so_far: f64 = ray_t.max;
 
         for (self.objects.items) |object| {
-            if (object.hit(ray, ray_tmin, closest_so_far, &hit_record)) {
+            if (object.hit(ray, Interval.init(ray_t.min, closest_so_far), &hit_record)) {
                 hit_anything = true;
                 closest_so_far = hit_record.t;
                 rec.* = hit_record;
@@ -74,7 +75,7 @@ pub const Sphere = struct {
         };
     }
 
-    pub fn hit(self: *const Self, ray: *const Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
         const oc = ray.origin.vsub(&self.centor);
 
         const a = ray.direction.lenSquared();
@@ -89,10 +90,10 @@ pub const Sphere = struct {
 
         const root = (-hb - sqrtd) / a;
 
-        // find the nearest root that lies in the acceptable range: (tmin, tmax)
-        if (root <= ray_tmin or root >= ray_tmax) {
+        // find the nearest root that lies in the acceptable range: (ray_t.min, ray_t.max)
+        if (!ray_t.surrounds(root)) {
             const root1 = (-hb + sqrtd) / a;
-            if (root1 <= ray_tmin or root1 >= ray_tmax) {
+            if (!ray_t.surrounds(root1)) {
                 return false;
             }
         }

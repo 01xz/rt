@@ -6,6 +6,7 @@ const Vec3 = @import("vec3.zig").Vec3;
 const Point = Vec3(f64);
 const Color = Vec3(f64);
 const Ray = @import("Ray.zig");
+const Interval = @import("Interval.zig");
 const HittableList = hittable.HittableList;
 const HitRecord = hittable.HitRecord;
 const Hittable = hittable.Hittable;
@@ -53,7 +54,7 @@ pub fn rayColor(ray: *const Ray, world: *const HittableList) Color {
     var rec: HitRecord = undefined;
 
     // normals-colored world
-    if (world.hit(ray, 0.0, inf, &rec)) {
+    if (world.hit(ray, Interval.init(0.0, inf), &rec)) {
         return Color.at(1.0, 1.0, 1.0).vadd(&rec.normal).mul(0.5);
     }
 
