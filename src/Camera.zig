@@ -146,11 +146,22 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth:
     return color_start * v3(1.0 - a) + color_end * v3(a);
 }
 
+inline fn gammaCorrection(color: *const Color) Color {
+    // gamma 2
+    return Color{
+        @sqrt(color[0]),
+        @sqrt(color[1]),
+        @sqrt(color[2]),
+    };
+}
+
 inline fn writeColor(color: *const Color, samples_per_pixel: u32) i64 {
     const scale = 1.0 / @as(f64, @floatFromInt(samples_per_pixel));
+    const scaled_color = color.* * v3(scale);
+    const corrected_color = gammaCorrection(&scaled_color);
     const intensity = Interval.init(0.000, 0.999);
-    const r: i64 = @intFromFloat(256.0 * intensity.clamp(color[0] * scale));
-    const g: i64 = @intFromFloat(256.0 * intensity.clamp(color[1] * scale));
-    const b: i64 = @intFromFloat(256.0 * intensity.clamp(color[2] * scale));
+    const r: i64 = @intFromFloat(256.0 * intensity.clamp(corrected_color[0]));
+    const g: i64 = @intFromFloat(256.0 * intensity.clamp(corrected_color[1]));
+    const b: i64 = @intFromFloat(256.0 * intensity.clamp(corrected_color[2]));
     return r << 16 | g << 8 | b;
 }
