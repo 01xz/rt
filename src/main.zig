@@ -45,6 +45,7 @@ pub fn main() !void {
         16.0 / 9.0,
         400,
         100,
+        50,
     );
     const color_array = try camera.render(&world, allocator);
 

@@ -23,6 +23,8 @@ image_height: u32,
 
 samples_per_pixel: u32,
 
+max_depth: u32,
+
 centor: Point,
 
 pixel00_loc: Point,
@@ -34,6 +36,7 @@ pub fn init(
     comptime aspect_ratio: f64,
     comptime image_width: u32,
     comptime samples_per_pixel: u32,
+    comptime max_depth: u32,
 ) Camera {
     const image_height: u32 = blk: {
         const height: u32 = @intFromFloat(@as(f64, @floatFromInt(image_width)) / aspect_ratio);
@@ -65,6 +68,7 @@ pub fn init(
         .image_width = image_width,
         .image_height = image_height,
         .samples_per_pixel = samples_per_pixel,
+        .max_depth = max_depth,
         .centor = centor,
         .pixel00_loc = pixel00_loc,
         .pixel_delta_u = pixel_delta_u,
@@ -85,7 +89,7 @@ pub fn render(self: *const Camera, world: *const HittableList, allocator: Alloca
             var pixel_color = Color{ 0.0, 0.0, 0.0 };
             for (0..self.samples_per_pixel) |_| {
                 const ray = self.getRay(i, j, &rng);
-                const ray_color = rayColor(&ray, world, &rng);
+                const ray_color = rayColor(&ray, world, &rng, self.max_depth);
                 pixel_color += ray_color;
             }
             colored_pixels[j][i] = writeColor(&pixel_color, self.samples_per_pixel);
@@ -112,7 +116,12 @@ fn getRay(self: *const Camera, i: usize, j: usize, rng: *RandomGen) Ray {
     return Ray.init(ray_origin, ray_direction);
 }
 
-fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen) Color {
+fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth: u32) Color {
+    // reach the ray bounce limit
+    if (depth <= 0) {
+        return Color{ 0.0, 0.0, 0.0 };
+    }
+
     const inf = std.math.inf(f64);
 
     var rec: HitRecord = undefined;
@@ -121,7 +130,7 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen) Color 
     if (world.hit(ray, Interval.init(0.0, inf), &rec)) {
         const direction = utils.getRandomOnHemiSphere(rng, rec.normal);
         const reflected_ray = Ray.init(rec.point, direction);
-        return rayColor(&reflected_ray, world, rng) * v3(0.5);
+        return rayColor(&reflected_ray, world, rng, depth - 1) * v3(0.5);
     }
 
     const color_start = Color{ 1.0, 1.0, 1.0 };
