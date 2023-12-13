@@ -35,3 +35,7 @@ pub fn contains(self: *const Interval, t: f64) bool {
 pub fn surrounds(self: *const Interval, t: f64) bool {
     return self.min < t and t < self.max;
 }
+
+pub fn clamp(self: *const Interval, t: f64) f64 {
+    return if (t < self.min) self.min else if (t > self.max) self.max else t;
+}

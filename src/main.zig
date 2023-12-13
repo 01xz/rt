@@ -1,14 +1,13 @@
 const std = @import("std");
 const config = @import("config");
-const vec3 = @import("vec3.zig");
+const vec = @import("vec.zig");
 const hittable = @import("hittable.zig");
 
 const Camera = @import("Camera.zig");
 const HitRecord = hittable.HitRecord;
 const HittableList = hittable.HittableList;
 const Sphere = hittable.Sphere;
-const Vec3 = vec3.Vec3;
-const Color = Vec3(f64);
+const Vec3 = vec.Vec3;
 const Point = Vec3(f64);
 
 fn writePPM(writer: anytype, colored_pixels: [][]const i64) !void {
@@ -19,11 +18,10 @@ fn writePPM(writer: anytype, colored_pixels: [][]const i64) !void {
 
     for (colored_pixels) |row| {
         for (row) |p| {
-            try writer.print("{d} {d} {d}\n", .{
-                (p >> 16) & 0xff,
-                (p >> 8) & 0xff,
-                p & 0xff,
-            });
+            const r = (p >> 16) & 0xff;
+            const g = (p >> 8) & 0xff;
+            const b = p & 0xff;
+            try writer.print("{d} {d} {d}\n", .{ r, g, b });
         }
     }
 }
@@ -39,11 +37,14 @@ pub fn main() !void {
 
     // the world
     var world = HittableList.init(allocator);
-    try world.add(.{ .sphere = Sphere.init(Point.at(0.0, 0.0, -1.0), 0.5) });
-    try world.add(.{ .sphere = Sphere.init(Point.at(0.0, -100.5, -1.0), 100.0) });
+    try world.add(.{ .sphere = Sphere.init(Point{ 0.0, 0.0, -1.0 }, 0.5) });
+    try world.add(.{ .sphere = Sphere.init(Point{ 0.0, -100.5, -1.0 }, 100.0) });
 
     // render the world
-    const camera = Camera.init(16.0 / 9.0, 1920);
+    const camera = Camera.init(
+        16.0 / 9.0,
+        400,
+    );
     const color_array = try camera.render(&world, allocator);
 
     var buffer_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
