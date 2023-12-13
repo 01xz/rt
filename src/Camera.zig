@@ -127,7 +127,7 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth:
     var rec: HitRecord = undefined;
 
     // normals-colored world
-    if (world.hit(ray, Interval.init(0.0, inf), &rec)) {
+    if (world.hit(ray, Interval.init(0.001, inf), &rec)) {
         const direction = utils.getRandomOnHemiSphere(rng, rec.normal);
         const reflected_ray = Ray.init(rec.point, direction);
         return rayColor(&reflected_ray, world, rng, depth - 1) * v3(0.5);
