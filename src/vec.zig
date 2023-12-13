@@ -36,7 +36,7 @@ pub fn fill(comptime T: type, x: anytype) T {
     const Tx = @TypeOf(x);
     return switch (@typeInfo(Tx)) {
         .ComptimeFloat, .Float, .ComptimeInt, .Int => @splat(@as(Tc, x)),
-        else => @compileError("not implemented for " ++ @typeName(Tx)),
+        else => @compileError("fill: " ++ @typeName(Tx) ++ "is not supported"),
     };
 }
 
@@ -54,7 +54,7 @@ pub fn dot(v1: anytype, v2: anytype) ChildTypeOf(AssertIsTypeVector(@TypeOf(v1))
     const Tv1 = AssertIsTypeVector(@TypeOf(v1));
     const Tv2 = AssertIsTypeVector(@TypeOf(v2));
     if (Tv1 != Tv2) {
-        @compileError("v1 and v2 must be of the same type");
+        @compileError("dot: v1 and v2 must be of the same type");
     }
     return @reduce(.Add, v1 * v2);
 }
@@ -71,7 +71,7 @@ pub fn cross3(v1: anytype, v2: anytype) AssertIsTypeVector(@TypeOf(v1)) {
     const Tv1 = AssertIsTypeVector(@TypeOf(v1));
     const Tv2 = AssertIsTypeVector(@TypeOf(v2));
     if (Tv1 != Tv2) {
-        @compileError("v1 and v2 must be of the same type");
+        @compileError("cross3: v1 and v2 must be of the same type");
     }
     if (vsize(Tv1) != 3 or vsize(Tv2) != 3) {
         @compileError("cross3: v1 and v2 must be 3-d vector");
