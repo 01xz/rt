@@ -85,7 +85,7 @@ pub fn render(self: *const Camera, world: *const HittableList, allocator: Alloca
             var pixel_color = Color{ 0.0, 0.0, 0.0 };
             for (0..self.samples_per_pixel) |_| {
                 const ray = self.getRay(i, j, &rng);
-                const ray_color = rayColor(&ray, world);
+                const ray_color = rayColor(&ray, world, &rng);
                 pixel_color += ray_color;
             }
             colored_pixels[j][i] = writeColor(&pixel_color, self.samples_per_pixel);
@@ -112,14 +112,16 @@ fn getRay(self: *const Camera, i: usize, j: usize, rng: *RandomGen) Ray {
     return Ray.init(ray_origin, ray_direction);
 }
 
-fn rayColor(ray: *const Ray, world: *const HittableList) Color {
+fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen) Color {
     const inf = std.math.inf(f64);
 
     var rec: HitRecord = undefined;
 
     // normals-colored world
     if (world.hit(ray, Interval.init(0.0, inf), &rec)) {
-        return (rec.normal + v3(1.0)) * v3(0.5);
+        const direction = utils.getRandomOnHemiSphere(rng, rec.normal);
+        const reflected_ray = Ray.init(rec.point, direction);
+        return rayColor(&reflected_ray, world, rng) * v3(0.5);
     }
 
     const color_start = Color{ 1.0, 1.0, 1.0 };
@@ -135,9 +137,10 @@ fn rayColor(ray: *const Ray, world: *const HittableList) Color {
 }
 
 inline fn writeColor(color: *const Color, samples_per_pixel: u32) i64 {
+    const scale = 1.0 / @as(f64, @floatFromInt(samples_per_pixel));
     const intensity = Interval.init(0.000, 0.999);
-    const r: i64 = @intFromFloat(256.0 * intensity.clamp(color[0] / @as(f64, @floatFromInt(samples_per_pixel))));
-    const g: i64 = @intFromFloat(256.0 * intensity.clamp(color[1] / @as(f64, @floatFromInt(samples_per_pixel))));
-    const b: i64 = @intFromFloat(256.0 * intensity.clamp(color[2] / @as(f64, @floatFromInt(samples_per_pixel))));
+    const r: i64 = @intFromFloat(256.0 * intensity.clamp(color[0] * scale));
+    const g: i64 = @intFromFloat(256.0 * intensity.clamp(color[1] * scale));
+    const b: i64 = @intFromFloat(256.0 * intensity.clamp(color[2] * scale));
     return r << 16 | g << 8 | b;
 }
