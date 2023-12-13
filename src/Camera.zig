@@ -11,6 +11,7 @@ const Interval = @import("Interval.zig");
 const Allocator = std.mem.Allocator;
 const HitRecord = hittable.HitRecord;
 const HittableList = hittable.HittableList;
+const RandomGen = utils.RandomGen;
 const Vec3 = vec.Vec3;
 const Color = Vec3(f64);
 const Point = Vec3(f64);
@@ -19,6 +20,8 @@ aspect_ratio: f64,
 
 image_width: u32,
 image_height: u32,
+
+samples_per_pixel: u32,
 
 centor: Point,
 
@@ -30,6 +33,7 @@ pixel_delta_v: Vec3(f64),
 pub fn init(
     comptime aspect_ratio: f64,
     comptime image_width: u32,
+    comptime samples_per_pixel: u32,
 ) Camera {
     const image_height: u32 = blk: {
         const height: u32 = @intFromFloat(@as(f64, @floatFromInt(image_width)) / aspect_ratio);
@@ -60,6 +64,7 @@ pub fn init(
         .aspect_ratio = aspect_ratio,
         .image_width = image_width,
         .image_height = image_height,
+        .samples_per_pixel = samples_per_pixel,
         .centor = centor,
         .pixel00_loc = pixel00_loc,
         .pixel_delta_u = pixel_delta_u,
@@ -73,22 +78,36 @@ pub fn render(self: *const Camera, world: *const HittableList, allocator: Alloca
         item.* = try allocator.alloc(i64, self.image_width);
     }
 
+    var rng = RandomGen.init(@bitCast(std.time.timestamp()));
+
     for (0..self.image_height) |j| {
         for (0..self.image_width) |i| {
-            const ray = self.getRay(i, j);
-            const pixel_color = rayColor(&ray, world);
-            colored_pixels[j][i] = writeColor(&pixel_color);
+            var pixel_color = Color{ 0.0, 0.0, 0.0 };
+            for (0..self.samples_per_pixel) |_| {
+                const ray = self.getRay(i, j, &rng);
+                const ray_color = rayColor(&ray, world);
+                pixel_color += ray_color;
+            }
+            colored_pixels[j][i] = writeColor(&pixel_color, self.samples_per_pixel);
         }
     }
 
     return colored_pixels;
 }
 
-fn getRay(self: *const Camera, i: usize, j: usize) Ray {
+fn getRay(self: *const Camera, i: usize, j: usize, rng: *RandomGen) Ray {
     const pixel_centor = self.pixel00_loc + self.pixel_delta_u * v3(@floatFromInt(i)) + self.pixel_delta_v * v3(@floatFromInt(j));
 
+    const pixel_sample_square = blk: {
+        const px = -0.5 + utils.getRandom(rng, f64);
+        const py = -0.5 + utils.getRandom(rng, f64);
+        break :blk (self.pixel_delta_u * v3(px)) + (self.pixel_delta_v * v3(py));
+    };
+
+    const pixel_sample = pixel_centor + pixel_sample_square;
+
     const ray_origin = self.centor;
-    const ray_direction = pixel_centor - ray_origin;
+    const ray_direction = pixel_sample - ray_origin;
 
     return Ray.init(ray_origin, ray_direction);
 }
@@ -115,11 +134,10 @@ fn rayColor(ray: *const Ray, world: *const HittableList) Color {
     return color_start * v3(1.0 - a) + color_end * v3(a);
 }
 
-inline fn writeColor(color: *const Color) i64 {
-    const icolor = Vec3(i64){
-        @intFromFloat(255.999 * color[2]),
-        @intFromFloat(255.999 * color[1]),
-        @intFromFloat(255.999 * color[0]),
-    };
-    return icolor[2] << 16 | icolor[1] << 8 | icolor[0];
+inline fn writeColor(color: *const Color, samples_per_pixel: u32) i64 {
+    const intensity = Interval.init(0.000, 0.999);
+    const r: i64 = @intFromFloat(256.0 * intensity.clamp(color[0] / @as(f64, @floatFromInt(samples_per_pixel))));
+    const g: i64 = @intFromFloat(256.0 * intensity.clamp(color[1] / @as(f64, @floatFromInt(samples_per_pixel))));
+    const b: i64 = @intFromFloat(256.0 * intensity.clamp(color[2] / @as(f64, @floatFromInt(samples_per_pixel))));
+    return r << 16 | g << 8 | b;
 }
