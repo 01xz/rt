@@ -6,7 +6,7 @@ pub fn Vec3(comptime T: type) type {
     return @Vector(3, T);
 }
 
-pub inline fn vec3(t: f64) Vec3(f64) {
+pub inline fn v3(t: f64) Vec3(f64) {
     return fill(Vec3(f64), t);
 }
 
@@ -41,12 +41,12 @@ pub fn fill(comptime T: type, x: anytype) T {
 }
 
 test "fill a vector" {
-    const v1 = @Vector(3, i64){ 42, 42, 42 };
-    const v2 = fill(Vec3(i64), 42);
-    try expectEqual(v1, v2);
-    const v3 = @Vector(3, f64){ 42.0, 42.0, 42.0 };
-    const v4 = fill(Vec3(f64), 42.0);
-    try expectEqual(v3, v4);
+    const va = @Vector(3, i64){ 42, 42, 42 };
+    const vb = fill(Vec3(i64), 42);
+    try expectEqual(va, vb);
+    const vc = @Vector(3, f64){ 42.0, 42.0, 42.0 };
+    const vd = fill(Vec3(f64), 42.0);
+    try expectEqual(vc, vd);
 }
 
 /// dot product of vector `v1` and `v2`

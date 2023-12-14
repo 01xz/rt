@@ -1,9 +1,11 @@
 const std = @import("std");
+const material = @import("material.zig");
 const vec = @import("vec.zig");
-const v3 = vec.vec3;
+const v3 = vec.v3;
 
 const Ray = @import("Ray.zig");
 const Interval = @import("Interval.zig");
+const Material = material.Material;
 const Vec3 = vec.Vec3;
 const Point = Vec3(f64);
 const ArrayList = std.ArrayList;
@@ -14,6 +16,7 @@ pub const HitRecord = struct {
     normal: Vec3(f64),
     t: f64,
     front_face: bool,
+    mat: Material,
 };
 
 pub const Hittable = union(enum) {
@@ -25,6 +28,10 @@ pub const Hittable = union(enum) {
         return switch (self) {
             .sphere => |s| s.hit(ray, ray_t, rec),
         };
+    }
+
+    pub fn sphere(centor: Point, radius: f64, mat: Material) Self {
+        return .{ .sphere = Sphere.init(centor, radius, mat) };
     }
 };
 
@@ -64,16 +71,18 @@ pub const HittableList = struct {
     }
 };
 
-pub const Sphere = struct {
+const Sphere = struct {
     centor: Point,
     radius: f64,
+    mat: Material,
 
     const Self = @This();
 
-    pub fn init(centor: Point, radius: f64) Self {
+    pub fn init(centor: Point, radius: f64, mat: Material) Self {
         return .{
             .centor = centor,
             .radius = radius,
+            .mat = mat,
         };
     }
 
@@ -109,6 +118,8 @@ pub const Sphere = struct {
 
         // always point against the incident ray
         rec.normal = if (rec.front_face) outward_normal else -outward_normal;
+
+        rec.mat = self.mat;
 
         return true;
     }

@@ -2,7 +2,7 @@ const Ray = @This();
 
 const std = @import("std");
 const vec = @import("vec.zig");
-const v3 = vec.vec3;
+const v3 = vec.v3;
 
 const Vec3 = vec.Vec3;
 const Point = Vec3(f64);

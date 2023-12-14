@@ -1,13 +1,16 @@
 const std = @import("std");
 const config = @import("config");
-const vec = @import("vec.zig");
 const hittable = @import("hittable.zig");
+const material = @import("material.zig");
+const vec = @import("vec.zig");
 
 const Camera = @import("Camera.zig");
 const HitRecord = hittable.HitRecord;
+const Hittable = hittable.Hittable;
 const HittableList = hittable.HittableList;
-const Sphere = hittable.Sphere;
+const Material = material.Material;
 const Vec3 = vec.Vec3;
+const Color = Vec3(f64);
 const Point = Vec3(f64);
 
 fn writePPM(writer: anytype, colored_pixels: [][]const i64) !void {
@@ -35,10 +38,18 @@ pub fn main() !void {
 
     const allocator = arena.allocator();
 
+    // materials
+    const mat_ground = Material.lambertian(Color{ 0.8, 0.8, 0.0 });
+    const mat_center = Material.lambertian(Color{ 0.7, 0.3, 0.3 });
+    const mat_left = Material.metal(Color{ 0.8, 0.8, 0.8 });
+    const mat_right = Material.metal(Color{ 0.8, 0.6, 0.2 });
+
     // the world
     var world = HittableList.init(allocator);
-    try world.add(.{ .sphere = Sphere.init(Point{ 0.0, 0.0, -1.0 }, 0.5) });
-    try world.add(.{ .sphere = Sphere.init(Point{ 0.0, -100.5, -1.0 }, 100.0) });
+    try world.add(Hittable.sphere(Point{ 0.0, -100.5, -1.0 }, 100.0, mat_ground));
+    try world.add(Hittable.sphere(Point{ 0.0, 0.0, -1.0 }, 0.5, mat_center));
+    try world.add(Hittable.sphere(Point{ -1.0, 0.0, -1.0 }, 0.5, mat_left));
+    try world.add(Hittable.sphere(Point{ 1.0, 0.0, -1.0 }, 0.5, mat_right));
 
     // render the world
     const camera = Camera.init(
@@ -51,6 +62,8 @@ pub fn main() !void {
 
     var buffer_writer = std.io.bufferedWriter(std.io.getStdOut().writer());
     var writer = buffer_writer.writer();
+
+    std.debug.print("start writing PPM ...\n", .{});
 
     try writePPM(&writer, color_array);
 

@@ -2,9 +2,10 @@ const Camera = @This();
 
 const std = @import("std");
 const hittable = @import("hittable.zig");
-const vec = @import("vec.zig");
 const utils = @import("utils.zig");
-const v3 = vec.vec3;
+const material = @import("material.zig");
+const vec = @import("vec.zig");
+const v3 = vec.v3;
 
 const Ray = @import("Ray.zig");
 const Interval = @import("Interval.zig");
@@ -12,6 +13,8 @@ const Allocator = std.mem.Allocator;
 const HitRecord = hittable.HitRecord;
 const HittableList = hittable.HittableList;
 const RandomGen = utils.RandomGen;
+const Scatter = material.Scatter;
+const Material = material.Material;
 const Vec3 = vec.Vec3;
 const Color = Vec3(f64);
 const Point = Vec3(f64);
@@ -128,10 +131,10 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth:
 
     // normals-colored world
     if (world.hit(ray, Interval.init(0.001, inf), &rec)) {
-        // lambertian distribution
-        const direction = rec.normal + utils.getRandomUnitVec3(rng);
-        const reflected_ray = Ray.init(rec.point, direction);
-        return rayColor(&reflected_ray, world, rng, depth - 1) * v3(0.5);
+        if (rec.mat.scatter(ray, &rec, rng)) |s| {
+            return s.attenuation * rayColor(&s.scattered, world, rng, depth - 1);
+        }
+        return Color{ 0.0, 0.0, 0.0 };
     }
 
     const color_start = Color{ 1.0, 1.0, 1.0 };
