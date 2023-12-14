@@ -127,10 +127,7 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth:
 
     const inf = std.math.inf(f64);
 
-    var rec: HitRecord = undefined;
-
-    // normals-colored world
-    if (world.hit(ray, Interval.init(0.001, inf), &rec)) {
+    if (world.hit(ray, Interval.init(0.001, inf))) |rec| {
         if (rec.mat.scatter(ray, &rec, rng)) |s| {
             return s.attenuation * rayColor(&s.scattered, world, rng, depth - 1);
         }

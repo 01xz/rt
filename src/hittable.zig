@@ -24,9 +24,9 @@ pub const Hittable = union(enum) {
 
     const Self = @This();
 
-    pub fn hit(self: Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
+    pub fn hit(self: Self, ray: *const Ray, ray_t: Interval) ?HitRecord {
         return switch (self) {
-            .sphere => |s| s.hit(ray, ray_t, rec),
+            .sphere => |s| s.hit(ray, ray_t),
         };
     }
 
@@ -54,20 +54,23 @@ pub const HittableList = struct {
         try self.objects.append(object);
     }
 
-    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
+    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval) ?HitRecord {
         var hit_record: HitRecord = undefined;
         var hit_anything: bool = false;
         var closest_so_far: f64 = ray_t.max;
 
         for (self.objects.items) |object| {
-            if (object.hit(ray, Interval.init(ray_t.min, closest_so_far), &hit_record)) {
+            if (object.hit(ray, Interval.init(ray_t.min, closest_so_far))) |rec| {
                 hit_anything = true;
-                closest_so_far = hit_record.t;
-                rec.* = hit_record;
+                closest_so_far = rec.t;
+                hit_record = rec;
             }
         }
 
-        return hit_anything;
+        return if (hit_anything)
+            hit_record
+        else
+            null;
     }
 };
 
@@ -86,7 +89,7 @@ const Sphere = struct {
         };
     }
 
-    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval, rec: *HitRecord) bool {
+    pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval) ?HitRecord {
         const oc = ray.origin - self.centor;
 
         const a = vec.dot(ray.direction, ray.direction);
@@ -95,7 +98,7 @@ const Sphere = struct {
 
         const d = hb * hb - a * c;
 
-        if (d < 0.0) return false;
+        if (d < 0.0) return null;
 
         const sqrtd = @sqrt(d);
 
@@ -105,22 +108,26 @@ const Sphere = struct {
         if (!ray_t.surrounds(root)) {
             root = (-hb + sqrtd) / a;
             if (!ray_t.surrounds(root)) {
-                return false;
+                return null;
             }
         }
 
-        rec.t = root;
-        rec.point = ray.at(root);
+        const rec_t = root;
+        const rec_point = ray.at(root);
 
-        const outward_normal = (rec.point - self.centor) / v3(self.radius);
+        const outward_normal = (rec_point - self.centor) / v3(self.radius);
 
-        rec.front_face = vec.dot(outward_normal, ray.direction) < 0.0;
+        const rec_front_face = vec.dot(outward_normal, ray.direction) < 0.0;
 
         // always point against the incident ray
-        rec.normal = if (rec.front_face) outward_normal else -outward_normal;
+        const rec_normal = if (rec_front_face) outward_normal else -outward_normal;
 
-        rec.mat = self.mat;
-
-        return true;
+        return .{
+            .point = rec_point,
+            .normal = rec_normal,
+            .t = rec_t,
+            .front_face = rec_front_face,
+            .mat = self.mat,
+        };
     }
 };
