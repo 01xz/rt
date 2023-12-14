@@ -99,12 +99,12 @@ const Sphere = struct {
 
         const sqrtd = @sqrt(d);
 
-        const root = (-hb - sqrtd) / a;
+        var root = (-hb - sqrtd) / a;
 
         // find the nearest root that lies in the acceptable range: (ray_t.min, ray_t.max)
         if (!ray_t.surrounds(root)) {
-            const root1 = (-hb + sqrtd) / a;
-            if (!ray_t.surrounds(root1)) {
+            root = (-hb + sqrtd) / a;
+            if (!ray_t.surrounds(root)) {
                 return false;
             }
         }
