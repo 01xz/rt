@@ -13,6 +13,7 @@ const Color = Vec3(f64);
 pub const Scatter = struct {
     attenuation: Color,
     scattered: Ray,
+    // is_scattered: bool,
 };
 
 pub const Material = union(enum) {
@@ -32,8 +33,8 @@ pub const Material = union(enum) {
         return .{ .lambertian = Lambertian.init(albedo) };
     }
 
-    pub fn metal(albedo: Color) Self {
-        return .{ .metal = Metal.init(albedo) };
+    pub fn metal(albedo: Color, fuzz: f64) Self {
+        return .{ .metal = Metal.init(albedo, fuzz) };
     }
 };
 
@@ -62,23 +63,24 @@ const Lambertian = struct {
 
 const Metal = struct {
     albedo: Color,
+    fuzz: f64,
 
     const Self = @This();
 
-    pub fn init(albedo: Color) Self {
+    pub fn init(albedo: Color, fuzz: f64) Self {
         return .{
             .albedo = albedo,
+            .fuzz = if (fuzz < 1.0) fuzz else 1.0,
         };
     }
 
     pub fn scatter(self: *const Self, ray_in: *const Ray, rec: *const HitRecord, rng: *RamdonGen) ?Scatter {
-        _ = rng;
         const reflected = reflect(vec.unit(ray_in.direction), rec.*.normal);
-        const scattered = Ray.init(rec.*.point, reflected);
-        return .{
+        const scattered = Ray.init(rec.*.point, reflected + v3(self.fuzz) * utils.getRandomUnitVec3(rng));
+        return if (vec.dot(scattered.direction, rec.normal) > 0.0) .{
             .attenuation = self.albedo,
             .scattered = scattered,
-        };
+        } else null;
     }
 };
 

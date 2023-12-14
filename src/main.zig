@@ -41,8 +41,8 @@ pub fn main() !void {
     // materials
     const mat_ground = Material.lambertian(Color{ 0.8, 0.8, 0.0 });
     const mat_center = Material.lambertian(Color{ 0.7, 0.3, 0.3 });
-    const mat_left = Material.metal(Color{ 0.8, 0.8, 0.8 });
-    const mat_right = Material.metal(Color{ 0.8, 0.6, 0.2 });
+    const mat_left = Material.metal(Color{ 0.8, 0.8, 0.8 }, 0.3);
+    const mat_right = Material.metal(Color{ 0.8, 0.6, 0.2 }, 1.0);
 
     // the world
     var world = HittableList.init(allocator);
