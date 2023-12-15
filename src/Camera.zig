@@ -29,8 +29,6 @@ aspect_ratio: Float,
 image_width: u32,
 image_height: u32,
 
-vertical_fov: Float,
-
 samples_per_pixel: u32,
 
 max_depth: u32,
@@ -42,10 +40,16 @@ pixel00_loc: Point,
 pixel_delta_u: Vec3,
 pixel_delta_v: Vec3,
 
+u: Vec3,
+v: Vec3,
+w: Vec3,
+
 pub fn init(
     comptime aspect_ratio: Float,
     comptime image_width: u32,
     comptime vertical_fov: Float,
+    comptime lookfrom: Point,
+    comptime lookat: Point,
     comptime samples_per_pixel: u32,
     comptime max_depth: u32,
 ) Camera {
@@ -54,7 +58,9 @@ pub fn init(
         break :blk if (height < 1) 1 else height;
     };
 
-    const focal_length: Float = 1.0;
+    const view_up = Vec3{ 0.0, 1.0, 0.0 };
+
+    const focal_length = vec.vlen(lookfrom - lookat);
 
     const theta = utils.radiansFromDegrees(vertical_fov);
     const h = @tan(theta / 2.0);
@@ -63,17 +69,22 @@ pub fn init(
     const viewport_width: Float = viewport_height *
         (@as(Float, @floatFromInt(image_width)) / @as(Float, @floatFromInt(image_height)));
 
-    const centor = Point{ 0, 0, 0 };
+    const centor = lookfrom;
+
+    // camera frame basis vectors: (u, v, w)
+    const w = vec.unit(lookfrom - lookat);
+    const u = vec.unit(vec.cross3(view_up, w));
+    const v = vec.cross3(w, u);
 
     // viewport edges
-    const viewport_u = Point{ viewport_width, 0.0, 0.0 };
-    const viewport_v = Point{ 0.0, -viewport_height, 0.0 };
+    const viewport_u = v3(viewport_width) * u;
+    const viewport_v = v3(viewport_height) * -v;
 
     // pixel delta
     const pixel_delta_u = viewport_u / v3(@floatFromInt(image_width));
     const pixel_delta_v = viewport_v / v3(@floatFromInt(image_height));
 
-    const viewport_upper_left = centor - Point{ 0, 0, focal_length } - (viewport_u * v3(0.5)) - (viewport_v * v3(0.5));
+    const viewport_upper_left = centor - (w * v3(focal_length)) - (viewport_u * v3(0.5)) - (viewport_v * v3(0.5));
 
     const pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * v3(0.5);
 
@@ -81,13 +92,15 @@ pub fn init(
         .aspect_ratio = aspect_ratio,
         .image_width = image_width,
         .image_height = image_height,
-        .vertical_fov = vertical_fov,
         .samples_per_pixel = samples_per_pixel,
         .max_depth = max_depth,
         .centor = centor,
         .pixel00_loc = pixel00_loc,
         .pixel_delta_u = pixel_delta_u,
         .pixel_delta_v = pixel_delta_v,
+        .u = u,
+        .v = v,
+        .w = w,
     };
 }
 
