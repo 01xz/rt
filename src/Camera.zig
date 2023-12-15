@@ -163,30 +163,26 @@ fn defocusDiskSample(self: *const Camera, rng: *RandomGen) Point {
     return self.centor + (v3(p[0]) * self.defocus_disk_u) + (v3(p[1]) * self.defocus_disk_v);
 }
 
-// TODO: use loop rather than recursion
 fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth: u32) Color {
-    // reach the ray bounce limit
-    if (depth <= 0) {
-        return Color{ 0.0, 0.0, 0.0 };
-    }
+    const black = Color{ 0.0, 0.0, 0.0 };
+    const white = Color{ 1.0, 1.0, 1.0 };
 
-    if (world.hit(ray, Interval.init(0.001, inf))) |rec| {
-        if (rec.mat.scatter(ray, &rec, rng)) |s| {
-            return s.attenuation * rayColor(&s.scattered, world, rng, depth - 1);
+    var ray_color = white;
+    var scattered = ray.*;
+
+    return for (0..depth) |_| {
+        if (world.hit(&scattered, Interval.init(0.001, inf))) |rec| {
+            if (rec.mat.scatter(&scattered, &rec, rng)) |s| {
+                scattered = s.scattered;
+                ray_color *= s.attenuation;
+            } else break black;
+        } else {
+            const ray_unit_vec = vec.unit(scattered.direction);
+            const t = 0.5 * (ray_unit_vec[1] + 1.0);
+            ray_color *= (Color{ 0.5, 0.7, 1.0 } * v3(t) + white * v3(1.0 - t));
+            break ray_color;
         }
-        return Color{ 0.0, 0.0, 0.0 };
-    }
-
-    const color_start = Color{ 1.0, 1.0, 1.0 };
-    const color_end = Color{ 0.5, 0.7, 1.0 };
-
-    const ray_unit_vec = vec.unit(ray.direction);
-
-    // scale `y()` to [0.0, 1.0]
-    const a = 0.5 * (ray_unit_vec[1] + 1.0);
-
-    // (1 - a) * start + a * end
-    return color_start * v3(1.0 - a) + color_end * v3(a);
+    } else black;
 }
 
 inline fn gammaCorrection(color: *const Color) Color {
