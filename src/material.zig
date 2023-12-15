@@ -1,14 +1,17 @@
 const std = @import("std");
+const rt = @import("rt.zig");
 const hittable = @import("hittable.zig");
 const utils = @import("utils.zig");
 const vec = @import("vec.zig");
-const v3 = vec.v3;
 
 const Ray = @import("Ray.zig");
-const RamdonGen = utils.RandomGen;
 const HitRecord = hittable.HitRecord;
-const Vec3 = vec.Vec3;
-const Color = Vec3(f64);
+const RamdonGen = rt.RandomGen;
+const Vec3 = rt.Vec3;
+const Color = rt.Color;
+const Float = rt.Float;
+
+const v3 = rt.v3;
 
 pub const Scatter = struct {
     attenuation: Color,
@@ -34,11 +37,11 @@ pub const Material = union(enum) {
         return .{ .lambertian = Lambertian.init(albedo) };
     }
 
-    pub fn metal(albedo: Color, fuzz: f64) Self {
+    pub fn metal(albedo: Color, fuzz: Float) Self {
         return .{ .metal = Metal.init(albedo, fuzz) };
     }
 
-    pub fn dielectric(ir: f64) Self {
+    pub fn dielectric(ir: Float) Self {
         return .{ .dielectric = Dielectric.init(ir) };
     }
 };
@@ -67,11 +70,11 @@ const Lambertian = struct {
 
 const Metal = struct {
     albedo: Color,
-    fuzz: f64,
+    fuzz: Float,
 
     const Self = @This();
 
-    pub fn init(albedo: Color, fuzz: f64) Self {
+    pub fn init(albedo: Color, fuzz: Float) Self {
         return .{
             .albedo = albedo,
             .fuzz = if (fuzz < 1.0) fuzz else 1.0,
@@ -89,11 +92,11 @@ const Metal = struct {
 };
 
 const Dielectric = struct {
-    ir: f64,
+    ir: Float,
 
     const Self = @This();
 
-    pub fn init(index_of_refraction: f64) Self {
+    pub fn init(index_of_refraction: Float) Self {
         return .{
             .ir = index_of_refraction,
         };
@@ -110,16 +113,16 @@ const Dielectric = struct {
     }
 };
 
-fn nearZero(v: Vec3(f64)) bool {
-    const e: f64 = 1.0e-8;
+fn nearZero(v: Vec3) bool {
+    const e: Float = 1.0e-8;
     return @fabs(v[0]) < e and @fabs(v[1]) < e and @fabs(v[2]) < e;
 }
 
-fn reflect(v: Vec3(f64), n: Vec3(f64)) Vec3(f64) {
+fn reflect(v: Vec3, n: Vec3) Vec3 {
     return v - v3(2.0 * vec.dot(v, n)) * n;
 }
 
-fn refract(v: Vec3(f64), n: Vec3(f64), etai_over_etat: f64) Vec3(f64) {
+fn refract(v: Vec3, n: Vec3, etai_over_etat: Float) Vec3 {
     const cos_theta = @min(vec.dot(-v, n), 1.0);
     const perp = v3(etai_over_etat) * (v + v3(cos_theta) * n);
     const parallel = v3(-@sqrt(@fabs(1.0 - vec.dot(perp, perp)))) * n;

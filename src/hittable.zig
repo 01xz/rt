@@ -1,20 +1,23 @@
 const std = @import("std");
+const rt = @import("rt.zig");
 const material = @import("material.zig");
 const vec = @import("vec.zig");
-const v3 = vec.v3;
 
 const Ray = @import("Ray.zig");
 const Interval = @import("Interval.zig");
 const Material = material.Material;
-const Vec3 = vec.Vec3;
-const Point = Vec3(f64);
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
+const Vec3 = rt.Vec3;
+const Point = rt.Point;
+const Float = rt.Float;
+
+const v3 = rt.v3;
 
 pub const HitRecord = struct {
     point: Point,
-    normal: Vec3(f64),
-    t: f64,
+    normal: Vec3,
+    t: Float,
     front_face: bool,
     mat: Material,
 };
@@ -30,7 +33,7 @@ pub const Hittable = union(enum) {
         };
     }
 
-    pub fn sphere(centor: Point, radius: f64, mat: Material) Self {
+    pub fn sphere(centor: Point, radius: Float, mat: Material) Self {
         return .{ .sphere = Sphere.init(centor, radius, mat) };
     }
 };
@@ -57,7 +60,7 @@ pub const HittableList = struct {
     pub fn hit(self: *const Self, ray: *const Ray, ray_t: Interval) ?HitRecord {
         var hit_record: HitRecord = undefined;
         var hit_anything: bool = false;
-        var closest_so_far: f64 = ray_t.max;
+        var closest_so_far: Float = ray_t.max;
 
         for (self.objects.items) |object| {
             if (object.hit(ray, Interval.init(ray_t.min, closest_so_far))) |rec| {
@@ -76,12 +79,12 @@ pub const HittableList = struct {
 
 const Sphere = struct {
     centor: Point,
-    radius: f64,
+    radius: Float,
     mat: Material,
 
     const Self = @This();
 
-    pub fn init(centor: Point, radius: f64, mat: Material) Self {
+    pub fn init(centor: Point, radius: Float, mat: Material) Self {
         return .{
             .centor = centor,
             .radius = radius,

@@ -1,5 +1,6 @@
 const std = @import("std");
 const config = @import("config");
+const rt = @import("rt.zig");
 const hittable = @import("hittable.zig");
 const material = @import("material.zig");
 const vec = @import("vec.zig");
@@ -9,9 +10,9 @@ const HitRecord = hittable.HitRecord;
 const Hittable = hittable.Hittable;
 const HittableList = hittable.HittableList;
 const Material = material.Material;
-const Vec3 = vec.Vec3;
-const Color = Vec3(f64);
-const Point = Vec3(f64);
+const Vec3 = rt.Vec3;
+const Color = rt.Color;
+const Point = rt.Point;
 
 fn writePPM(writer: anytype, colored_pixels: [][]const i64) !void {
     const image_height = colored_pixels.len;

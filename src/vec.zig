@@ -6,10 +6,6 @@ pub fn Vec3(comptime T: type) type {
     return @Vector(3, T);
 }
 
-pub inline fn v3(t: f64) Vec3(f64) {
-    return fill(Vec3(f64), t);
-}
-
 /// return the size of a vector type `T`
 pub inline fn vsize(comptime T: type) comptime_int {
     return @typeInfo(AssertIsTypeVector(T)).Vector.len;

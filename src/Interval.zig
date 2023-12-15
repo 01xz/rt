@@ -1,13 +1,16 @@
 const Interval = @This();
 
 const std = @import("std");
+const rt = @import("rt.zig");
 
-const inf = std.math.inf(f64);
+const Float = rt.Float;
 
-min: f64 = inf,
-max: f64 = -inf,
+const inf = rt.inf;
 
-pub fn init(min: f64, max: f64) Interval {
+min: Float = inf,
+max: Float = -inf,
+
+pub fn init(min: Float, max: Float) Interval {
     return .{
         .min = min,
         .max = max,
@@ -28,14 +31,14 @@ pub fn universe() Interval {
     };
 }
 
-pub fn contains(self: *const Interval, t: f64) bool {
+pub fn contains(self: *const Interval, t: Float) bool {
     return self.min <= t and t <= self.max;
 }
 
-pub fn surrounds(self: *const Interval, t: f64) bool {
+pub fn surrounds(self: *const Interval, t: Float) bool {
     return self.min < t and t < self.max;
 }
 
-pub fn clamp(self: *const Interval, t: f64) f64 {
+pub fn clamp(self: *const Interval, t: Float) Float {
     return if (t < self.min) self.min else if (t > self.max) self.max else t;
 }
