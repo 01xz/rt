@@ -120,20 +120,18 @@ pub fn init(
     };
 }
 
-pub fn render(self: *const Camera, world: *const HittableList, allocator: Allocator) ![][]i64 {
+pub fn render(self: *const Camera, world: *const HittableList, allocator: Allocator, rng: *RandomGen) ![][]i64 {
     var colored_pixels = try allocator.alloc([]i64, self.image_height);
     for (colored_pixels) |*item| {
         item.* = try allocator.alloc(i64, self.image_width);
     }
 
-    var rng = RandomGen.init(@bitCast(std.time.timestamp()));
-
     for (0..self.image_height) |j| {
         for (0..self.image_width) |i| {
             var pixel_color = Color{ 0.0, 0.0, 0.0 };
             for (0..self.samples_per_pixel) |_| {
-                const ray = self.getRay(i, j, &rng);
-                const ray_color = rayColor(&ray, world, &rng, self.max_depth);
+                const ray = self.getRay(i, j, rng);
+                const ray_color = rayColor(&ray, world, rng, self.max_depth);
                 pixel_color += ray_color;
             }
             colored_pixels[j][i] = writeColor(&pixel_color, self.samples_per_pixel);

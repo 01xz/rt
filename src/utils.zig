@@ -24,7 +24,7 @@ inline fn getRandomVec3(rng: *RandomGen) Vec3 {
     return Vec3{ getRandom(rng, Float), getRandom(rng, Float), getRandom(rng, Float) };
 }
 
-inline fn getRandomVec3InRange(rng: *RandomGen, min: Float, max: Float) Vec3 {
+pub inline fn getRandomVec3InRange(rng: *RandomGen, min: Float, max: Float) Vec3 {
     return Vec3{
         getRandomDoubleInRange(rng, min, max),
         getRandomDoubleInRange(rng, min, max),
