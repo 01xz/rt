@@ -50,6 +50,7 @@ pub fn main() !void {
     try world.add(Hittable.sphere(Point{ 0.0, -100.5, -1.0 }, 100.0, mat_ground));
     try world.add(Hittable.sphere(Point{ 0.0, 0.0, -1.0 }, 0.5, mat_center));
     try world.add(Hittable.sphere(Point{ -1.0, 0.0, -1.0 }, 0.5, mat_left));
+    try world.add(Hittable.sphere(Point{ -1.0, 0.0, -1.0 }, -0.4, mat_left));
     try world.add(Hittable.sphere(Point{ 1.0, 0.0, -1.0 }, 0.5, mat_right));
 
     // render the world

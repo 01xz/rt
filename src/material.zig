@@ -29,7 +29,7 @@ pub const Material = union(enum) {
         return switch (self) {
             .lambertian => |l| l.scatter(rec, rng),
             .metal => |m| m.scatter(ray_in, rec, rng),
-            .dielectric => |d| d.scatter(ray_in, rec),
+            .dielectric => |d| d.scatter(ray_in, rec, rng),
         };
     }
 
@@ -102,7 +102,7 @@ const Dielectric = struct {
         };
     }
 
-    pub fn scatter(self: *const Self, ray_in: *const Ray, rec: *const HitRecord) ?Scatter {
+    pub fn scatter(self: *const Self, ray_in: *const Ray, rec: *const HitRecord, rng: *RamdonGen) ?Scatter {
         const refraction_ratio = if (rec.front_face) (1.0 / self.ir) else self.ir;
 
         const unit_direction = vec.unit(ray_in.direction);
@@ -110,12 +110,15 @@ const Dielectric = struct {
         const cos_theta = @min(vec.dot(-unit_direction, rec.normal), 1.0);
         const sin_theta = @sqrt(1.0 - cos_theta * cos_theta);
 
-        const direction = if (sin_theta * refraction_ratio > 1.0)
+        const cannot_refract = sin_theta * refraction_ratio > 1.0;
+
+        const direction = if (cannot_refract or reflectance(cos_theta, refraction_ratio) > utils.getRandom(rng, Float))
             reflect(unit_direction, rec.normal)
         else
             refract(unit_direction, rec.normal, refraction_ratio);
 
         const scattered = Ray.init(rec.point, direction);
+
         return .{
             .attenuation = Color{ 1.0, 1.0, 1.0 },
             .scattered = scattered,
@@ -137,4 +140,11 @@ fn refract(v: Vec3, n: Vec3, etai_over_etat: Float) Vec3 {
     const perp = v3(etai_over_etat) * (v + v3(cos_theta) * n);
     const parallel = v3(-@sqrt(@fabs(1.0 - vec.dot(perp, perp)))) * n;
     return perp + parallel;
+}
+
+fn reflectance(cosine: Float, ref_idx: Float) Float {
+    // use Schlick's approximation for reflectance
+    var r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+    r0 = r0 * r0;
+    return r0 + (1.0 - r0) * std.math.pow(Float, (1.0 - cosine), 5.0);
 }
