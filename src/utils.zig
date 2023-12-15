@@ -5,6 +5,8 @@ const RandomGen = rt.RandomGen;
 const Vec3 = rt.Vec3;
 const Float = rt.Float;
 
+const pi = rt.pi;
+
 pub fn getRandom(rng: *RandomGen, comptime T: type) T {
     return switch (@typeInfo(T)) {
         .ComptimeFloat, .Float => rng.random().float(T),
@@ -54,4 +56,8 @@ pub inline fn getRandomOnHemiSphere(rng: *RandomGen, normal: Vec3) Vec3 {
     } else {
         return -v;
     }
+}
+
+pub inline fn radiansFromDegrees(degrees: Float) Float {
+    return degrees * pi / 180.0;
 }

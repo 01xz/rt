@@ -11,6 +11,8 @@ pub const Float = vec.ChildTypeOf(Vec3);
 
 pub const inf = std.math.inf(Float);
 
+pub const pi: Float = 3.1415926535897932385;
+
 pub inline fn v3(s: Float) Vec3 {
     return vec.fill(Vec3, s);
 }

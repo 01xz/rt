@@ -40,23 +40,21 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     // materials
-    const mat_ground = Material.lambertian(Color{ 0.8, 0.8, 0.0 });
-    const mat_center = Material.lambertian(Color{ 0.1, 0.2, 0.5 });
-    const mat_left = Material.dielectric(1.5);
-    const mat_right = Material.metal(Color{ 0.8, 0.6, 0.2 }, 0.0);
+    const mat_left = Material.lambertian(Color{ 0.0, 0.0, 1.0 });
+    const mat_right = Material.lambertian(Color{ 1.0, 0.0, 0.0 });
+
+    const r = @cos(rt.pi / 4.0);
 
     // the world
     var world = HittableList.init(allocator);
-    try world.add(Hittable.sphere(Point{ 0.0, -100.5, -1.0 }, 100.0, mat_ground));
-    try world.add(Hittable.sphere(Point{ 0.0, 0.0, -1.0 }, 0.5, mat_center));
-    try world.add(Hittable.sphere(Point{ -1.0, 0.0, -1.0 }, 0.5, mat_left));
-    try world.add(Hittable.sphere(Point{ -1.0, 0.0, -1.0 }, -0.4, mat_left));
-    try world.add(Hittable.sphere(Point{ 1.0, 0.0, -1.0 }, 0.5, mat_right));
+    try world.add(Hittable.sphere(Point{ -r, 0.0, -1.0 }, r, mat_left));
+    try world.add(Hittable.sphere(Point{ r, 0.0, -1.0 }, r, mat_right));
 
     // render the world
     const camera = Camera.init(
         16.0 / 9.0,
         400,
+        90,
         100,
         50,
     );

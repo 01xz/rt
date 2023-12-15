@@ -29,6 +29,8 @@ aspect_ratio: Float,
 image_width: u32,
 image_height: u32,
 
+vertical_fov: Float,
+
 samples_per_pixel: u32,
 
 max_depth: u32,
@@ -43,6 +45,7 @@ pixel_delta_v: Vec3,
 pub fn init(
     comptime aspect_ratio: Float,
     comptime image_width: u32,
+    comptime vertical_fov: Float,
     comptime samples_per_pixel: u32,
     comptime max_depth: u32,
 ) Camera {
@@ -53,7 +56,10 @@ pub fn init(
 
     const focal_length: Float = 1.0;
 
-    const viewport_height: Float = 2.0;
+    const theta = utils.radiansFromDegrees(vertical_fov);
+    const h = @tan(theta / 2.0);
+
+    const viewport_height: Float = 2.0 * h * focal_length;
     const viewport_width: Float = viewport_height *
         (@as(Float, @floatFromInt(image_width)) / @as(Float, @floatFromInt(image_height)));
 
@@ -75,6 +81,7 @@ pub fn init(
         .aspect_ratio = aspect_ratio,
         .image_width = image_width,
         .image_height = image_height,
+        .vertical_fov = vertical_fov,
         .samples_per_pixel = samples_per_pixel,
         .max_depth = max_depth,
         .centor = centor,
@@ -124,6 +131,7 @@ fn getRay(self: *const Camera, i: usize, j: usize, rng: *RandomGen) Ray {
     return Ray.init(ray_origin, ray_direction);
 }
 
+// TODO: use loop rather than recursion
 fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth: u32) Color {
     // reach the ray bounce limit
     if (depth <= 0) {
