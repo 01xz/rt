@@ -44,12 +44,21 @@ u: Vec3,
 v: Vec3,
 w: Vec3,
 
+defocus_angle: Float,
+
+focus_distance: Float,
+
+defocus_disk_u: Vec3,
+defocus_disk_v: Vec3,
+
 pub fn init(
     comptime aspect_ratio: Float,
     comptime image_width: u32,
     comptime vertical_fov: Float,
     comptime lookfrom: Point,
     comptime lookat: Point,
+    comptime defocus_angle: Float,
+    comptime focus_distance: Float,
     comptime samples_per_pixel: u32,
     comptime max_depth: u32,
 ) Camera {
@@ -60,12 +69,10 @@ pub fn init(
 
     const view_up = Vec3{ 0.0, 1.0, 0.0 };
 
-    const focal_length = vec.vlen(lookfrom - lookat);
-
     const theta = utils.radiansFromDegrees(vertical_fov);
     const h = @tan(theta / 2.0);
 
-    const viewport_height: Float = 2.0 * h * focal_length;
+    const viewport_height: Float = 2.0 * h * focus_distance;
     const viewport_width: Float = viewport_height *
         (@as(Float, @floatFromInt(image_width)) / @as(Float, @floatFromInt(image_height)));
 
@@ -84,9 +91,14 @@ pub fn init(
     const pixel_delta_u = viewport_u / v3(@floatFromInt(image_width));
     const pixel_delta_v = viewport_v / v3(@floatFromInt(image_height));
 
-    const viewport_upper_left = centor - (w * v3(focal_length)) - (viewport_u * v3(0.5)) - (viewport_v * v3(0.5));
+    const viewport_upper_left = centor - (w * v3(focus_distance)) - (viewport_u * v3(0.5)) - (viewport_v * v3(0.5));
 
     const pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * v3(0.5);
+
+    // camera defocus disk basis vectors
+    const defocus_radius = focus_distance * @tan(utils.radiansFromDegrees(defocus_angle / 2.0));
+    const defocus_disk_u = u * v3(defocus_radius);
+    const defocus_disk_v = v * v3(defocus_radius);
 
     return .{
         .aspect_ratio = aspect_ratio,
@@ -101,6 +113,10 @@ pub fn init(
         .u = u,
         .v = v,
         .w = w,
+        .defocus_angle = defocus_angle,
+        .focus_distance = focus_distance,
+        .defocus_disk_u = defocus_disk_u,
+        .defocus_disk_v = defocus_disk_v,
     };
 }
 
@@ -138,10 +154,15 @@ fn getRay(self: *const Camera, i: usize, j: usize, rng: *RandomGen) Ray {
 
     const pixel_sample = pixel_centor + pixel_sample_square;
 
-    const ray_origin = self.centor;
+    const ray_origin = if (self.defocus_angle <= 0) self.centor else self.defocusDiskSample(rng);
     const ray_direction = pixel_sample - ray_origin;
 
     return Ray.init(ray_origin, ray_direction);
+}
+
+fn defocusDiskSample(self: *const Camera, rng: *RandomGen) Point {
+    const p = utils.getRandomInUnitDisk(rng);
+    return self.centor + (v3(p[0]) * self.defocus_disk_u) + (v3(p[1]) * self.defocus_disk_v);
 }
 
 // TODO: use loop rather than recursion

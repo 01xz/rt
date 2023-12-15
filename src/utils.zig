@@ -39,7 +39,7 @@ inline fn getRandomVec3InUnitCube(rng: *RandomGen) Vec3 {
 inline fn getRandomVec3InUnitSphere(rng: *RandomGen) Vec3 {
     while (true) {
         const v = getRandomVec3InUnitCube(rng);
-        if (vec.dot(v, v) < 1) {
+        if (vec.dot(v, v) < 1.0) {
             return v;
         }
     }
@@ -55,6 +55,19 @@ pub inline fn getRandomOnHemiSphere(rng: *RandomGen, normal: Vec3) Vec3 {
         return v;
     } else {
         return -v;
+    }
+}
+
+pub inline fn getRandomInUnitDisk(rng: *RandomGen) Vec3 {
+    while (true) {
+        const v = Vec3{
+            getRandomDoubleInRange(rng, -1.0, 1.0),
+            getRandomDoubleInRange(rng, -1.0, 1.0),
+            0.0,
+        };
+        if (vec.dot(v, v) < 1.0) {
+            return v;
+        }
     }
 }
 
