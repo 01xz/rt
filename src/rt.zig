@@ -1,5 +1,4 @@
 const std = @import("std");
-const utils = @import("utils.zig");
 const vec = @import("vec.zig");
 
 pub const RandomGen = std.rand.DefaultPrng;
