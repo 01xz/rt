@@ -20,6 +20,8 @@ const Color = rt.Color;
 const Point = rt.Point;
 const Float = rt.Float;
 
+const inf = rt.inf;
+
 const v3 = rt.v3;
 
 aspect_ratio: Float,
@@ -127,8 +129,6 @@ fn rayColor(ray: *const Ray, world: *const HittableList, rng: *RandomGen, depth:
     if (depth <= 0) {
         return Color{ 0.0, 0.0, 0.0 };
     }
-
-    const inf = std.math.inf(Float);
 
     if (world.hit(ray, Interval.init(0.001, inf))) |rec| {
         if (rec.mat.scatter(ray, &rec, rng)) |s| {
