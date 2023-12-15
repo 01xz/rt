@@ -104,8 +104,18 @@ const Dielectric = struct {
 
     pub fn scatter(self: *const Self, ray_in: *const Ray, rec: *const HitRecord) ?Scatter {
         const refraction_ratio = if (rec.front_face) (1.0 / self.ir) else self.ir;
-        const refracted = refract(vec.unit(ray_in.direction), rec.normal, refraction_ratio);
-        const scattered = Ray.init(rec.point, refracted);
+
+        const unit_direction = vec.unit(ray_in.direction);
+
+        const cos_theta = @min(vec.dot(-unit_direction, rec.normal), 1.0);
+        const sin_theta = @sqrt(1.0 - cos_theta * cos_theta);
+
+        const direction = if (sin_theta * refraction_ratio > 1.0)
+            reflect(unit_direction, rec.normal)
+        else
+            refract(unit_direction, rec.normal, refraction_ratio);
+
+        const scattered = Ray.init(rec.point, direction);
         return .{
             .attenuation = Color{ 1.0, 1.0, 1.0 },
             .scattered = scattered,
