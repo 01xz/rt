@@ -56,16 +56,14 @@ pub fn main() !void {
     try world.add(Hittable.sphere(Point{ 0, 1, 0 }, 1.0, mat1));
     try world.add(Hittable.sphere(Point{ -4, 1, 0 }, 1.0, mat2));
     try world.add(Hittable.sphere(Point{ 4, 1, 0 }, 1.0, mat3));
-
-    var a: i8 = -11;
-    while (a < 11) {
-        var b: i8 = -11;
-        while (b < 11) {
+    // some random spheres
+    for (0..22) |a| {
+        for (0..22) |b| {
             const choose_mat = utils.getRandom(&rng, Float);
             const centor = Point{
-                @as(Float, @floatFromInt(a)) + 0.9 * utils.getRandom(&rng, Float),
+                @as(Float, @floatFromInt(@as(i32, @intCast(a)) - 11)) + 0.9 * utils.getRandom(&rng, Float),
                 0.2,
-                @as(Float, @floatFromInt(b)) + 0.9 * utils.getRandom(&rng, Float),
+                @as(Float, @floatFromInt(@as(i32, @intCast(b)) - 11)) + 0.9 * utils.getRandom(&rng, Float),
             };
 
             if (vec.vlen(centor - Point{ 4.0, 0.2, 0.0 }) > 0.9) {
@@ -87,9 +85,7 @@ pub fn main() !void {
                     try world.add(Hittable.sphere(centor, 0.2, mat));
                 }
             }
-            b += 1;
         }
-        a += 1;
     }
 
     // the camera
